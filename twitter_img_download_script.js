@@ -73,7 +73,8 @@ async function findImgAndDownload(){
           return;
         }
 
-        const likeDiv =  document.querySelector("[data-testid='like']") || document.querySelector("[data-testid='unlike']");
+        const likeDiv =  (article.querySelector("[data-testid='like']") ||
+                         article.querySelector("[data-testid='unlike']"));
         const likeStr =  likeDiv.getAttribute("aria-label");
         let likeNum = likeStr.match(/\d+/);
         if(!likeNum || parseInt(likeNum[0]) < MIN_LIKE){
@@ -134,7 +135,7 @@ async function findImgAndDownload(){
 
         let _link = url.href;
         const segment = url.pathname.substring(url.pathname.lastIndexOf('/') + 1);
-        let fn = timestamp||"" + author +" -- " +  + " " + segment;
+        let fn = [(timestamp ||""), author, segment].filter(e => e.length > 0).join(" -- ");
 
         if(format){
             fn = fn + "." + format;
