@@ -2,8 +2,8 @@
 // @name                Twitter: Download All Images
 // @name:zh-CN          Twitter：下载全部图片
 // @version             0.0.1
-// @description         One button click to download all imgs in twitter page. Firefox is recommended for this script. Chrome will keep popping up the annoying saveAs dialog.
-// @description:zh-CN   一键下载twitter页面所有图片。需要注意使用chrome会一直疯狂跳弹窗，建议使用firefox.
+// @description         One button click to download all imgs in twitter page. If Chrome keep popping up the annoying saveAs dialog, go to Chrome setting page and turn it off.
+// @description:zh-CN   一键下载twitter页面所有图片。需要注意使用chrome会一直疯狂跳弹窗，需要用户自行去设置页面关闭.
 // @author              aji
 // @namespace           https://github.com/hjyssg
 // @icon                https://i.imgur.com/M9oO8K9.png
@@ -51,6 +51,8 @@ function formatDate(date) {
     return [year, month, day].join('-');
 }
 
+const MIN_LIKE = 100;
+
 async function findImgAndDownload(){
     let queue = [];
     document.querySelectorAll("article").forEach(article => {
@@ -69,6 +71,13 @@ async function findImgAndDownload(){
         }
         if(!author){
           return;
+        }
+
+        const likeDiv =  document.querySelector("[data-testid='like']") || document.querySelector("[data-testid='unlike']");
+        const likeStr =  likeDiv.getAttribute("aria-label");
+        let likeNum = likeStr.match(/\d+/);
+        if(!likeNum || parseInt(likeNum[0]) < MIN_LIKE){
+            return;
         }
 
         let timeSpan = article.querySelector("article time");
@@ -95,7 +104,6 @@ async function findImgAndDownload(){
           });
         }
       })
-
     // queue = queue.filter(e => !downloadedLink[e.link]);
 
     for(let ii = 0; ii < queue.length; ii++){
@@ -126,7 +134,7 @@ async function findImgAndDownload(){
 
         let _link = url.href;
         const segment = url.pathname.substring(url.pathname.lastIndexOf('/') + 1);
-        let fn = author +" -- " + timestamp||"" + " " + segment;
+        let fn = timestamp||"" + author +" -- " +  + " " + segment;
 
         if(format){
             fn = fn + "." + format;
