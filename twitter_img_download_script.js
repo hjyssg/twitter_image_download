@@ -86,6 +86,18 @@ async function findImgAndDownload(){
             let dt = new Date(timeSpan.getAttribute("datetime"));
             timestamp = formatDate(dt);
         }
+
+        // video is too difficult to download
+        // let video =  article.querySelector("video");
+        // if(video && video.src){
+        //     const link = video.src;
+        //     queue.push({
+        //       isVideo: true,
+        //       author,
+        //       link,
+        //       timestamp
+        //     });
+        // }
    
         // console.log(author);  
         const imgs = article.querySelectorAll("img");
@@ -109,7 +121,7 @@ async function findImgAndDownload(){
 
     for(let ii = 0; ii < queue.length; ii++){
         const info = queue[ii];
-        const { link, author, timestamp } = info;
+        const { link, author, timestamp, isVideo } = info;
 
         if(_stop_download_){
             break;
@@ -119,22 +131,26 @@ async function findImgAndDownload(){
             continue;
         }
 
+        let _link;
+        let segment;
         const url = new URL(link);
         let format;
-        if(url.search){
-            if(url.searchParams.get("name")){
-                url.searchParams.set("name", "orig")
-            }
 
-            format = url.searchParams.get("format")
-        }  
-        // else{
-        //          // http://fridge-dweller.blogspot.com/2012/09/obtaining-tweeted-images-in-original.html
-        //          url.href += ":orig";
-        // }
+        if(isVideo){
+            _link = link;
+        }else{
+            
+            if(url.search){
+                if(url.searchParams.get("name")){
+                    url.searchParams.set("name", "orig")
+                }
+                format = url.searchParams.get("format")
+            }  
+            let _link = url.href;
+        }
 
-        let _link = url.href;
-        const segment = url.pathname.substring(url.pathname.lastIndexOf('/') + 1);
+        segment = url.pathname.substring(url.pathname.lastIndexOf('/') + 1);
+
         let fn = [(timestamp ||""), author, segment].filter(e => e.length > 0).join(" -- ");
 
         if(format){
