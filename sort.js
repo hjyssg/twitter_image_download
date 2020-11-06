@@ -30,7 +30,7 @@ fnArr.forEach(fileName => {
     }
 
     //prepare for grouping
-    const user =  fileName.split(" -- ")[0];
+    const user =  fileName.split(" -- ")[1];
     if(user.includes("@")){
         groupByUser[user] = groupByUser[user] || [];
         groupByUser[user].push(fileName);

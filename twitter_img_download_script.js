@@ -61,6 +61,7 @@ async function findImgAndDownload(){
         let author;
         let timestamp;
 
+        //get author
         for(let ii = 0; ii < spans.length; ii++){
           let e1 = spans[ii];
           let e2 = e1.parentElement.parentElement.parentElement.parentElement;
@@ -73,6 +74,7 @@ async function findImgAndDownload(){
           return;
         }
 
+        //get like
         const likeDiv =  (article.querySelector("[data-testid='like']") ||
                          article.querySelector("[data-testid='unlike']"));
         const likeStr =  likeDiv.getAttribute("aria-label");
@@ -85,10 +87,17 @@ async function findImgAndDownload(){
         if(timeSpan){
             let dt = new Date(timeSpan.getAttribute("datetime"));
             timestamp = formatDate(dt);
+        }else{
+            return;
         }
 
+
         // video is too difficult to download
-        // let video =  article.querySelector("video");
+        //skip video
+        let video =  article.querySelector("video");
+        if(video){
+            return;
+        }
         // if(video && video.src){
         //     const link = video.src;
         //     queue.push({
@@ -121,7 +130,10 @@ async function findImgAndDownload(){
 
     for(let ii = 0; ii < queue.length; ii++){
         const info = queue[ii];
-        const { link, author, timestamp, isVideo } = info;
+        let { link, author, timestamp, isVideo } = info;
+
+        //replace slash
+        author = author.replace("/", "／");
 
         if(_stop_download_){
             break;
@@ -146,7 +158,7 @@ async function findImgAndDownload(){
                 }
                 format = url.searchParams.get("format")
             }  
-            let _link = url.href;
+            _link = url.href;
         }
 
         segment = url.pathname.substring(url.pathname.lastIndexOf('/') + 1);
