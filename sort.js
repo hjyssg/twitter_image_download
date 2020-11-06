@@ -10,7 +10,11 @@ function isExist(path) {
     }
 };
 
-const folder_path = "C:\\Users\\jhuang342\\Downloads\\123"
+const folder_path = "C:\\Users\\hjy\\Downloads\\twitter-liked-until-2020-11-04";
+const output_path = "C:\\Users\\hjy\\Downloads\\twitter-liked-until-2020-11-04";
+let MKDIR_COUNT = 10;
+
+
 let fnArr = fs.readdirSync(folder_path);
 
 const groupByUser = {};
@@ -33,14 +37,12 @@ fnArr.forEach(fileName => {
     }
 });
 
-let MKDIR_COUNT = 3;
-const output_path = "C:\\Users\\jhuang342\\Downloads";
 
 for(let user in groupByUser){
     if(groupByUser.hasOwnProperty(user)){
         const imgs = groupByUser[user];
 
-        if(imgs.length > MKDIR_COUNT){
+        if(imgs.length >= MKDIR_COUNT){
 
             try{
                 const dest = path.join(output_path, user);
