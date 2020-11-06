@@ -133,7 +133,7 @@ async function findImgAndDownload(){
         let { link, author, timestamp, isVideo } = info;
 
         //replace slash
-        author = author.replace("/", "／");
+        author = author.replaceAll("/", "／");
 
         if(_stop_download_){
             break;
@@ -179,6 +179,14 @@ async function findImgAndDownload(){
           console.log(Object.keys(downloadedLink).length, "imgs downloaded")
           await sleep(100);
         }catch(err){
+            try{
+                await sleep(2000);
+                await GM_downloadPromise(_link, fn);
+                await sleep(1000);
+            } catch(err2){
+
+            }
+
           // console.error(err)
           debugger
         }
