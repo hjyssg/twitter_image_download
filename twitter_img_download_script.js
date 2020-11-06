@@ -10,6 +10,8 @@
 // @include             https://twitter.com/*
 // @include             https://mobile.twitter.com/*
 // @grant               GM_download
+// @grant               GM_setValue
+// @grant               GM_getValue
 // ==/UserScript==
 
 /* jshint esversion: 6 */
@@ -35,7 +37,7 @@ function sleep(ms) {
    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-const downloadedLink = {}
+let downloadedLink = GM_getValue("downloadedLink") || {};
 
 function formatDate(date) {
     var d = new Date(date),
@@ -184,11 +186,10 @@ async function findImgAndDownload(){
                 await GM_downloadPromise(_link, fn);
                 await sleep(1000);
             } catch(err2){
-
+                console.error("[error]", _link, err2);
             }
-
           // console.error(err)
-          debugger
+          // debugger
         }
     }
 }
@@ -200,11 +201,9 @@ function GM_downloadPromise(_link, fn){
             name: fn,
             saveAs: false,  // this do not work for Chrome
             onerror: err => {
-                console.error("error", _link);
                 reject(err);
             },
             ontimeout: ()=>{
-                console.error("timeout", _link);
                 reject("timeout");
             },
             onload: ()=>{
@@ -216,24 +215,29 @@ function GM_downloadPromise(_link, fn){
 
 let _stop_download_;
 
+const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+
 async function beginDownloadAndScroll(){
     _stop_download_ = false;
     let scrollReachEndCount = 0;
 
-    while(!_stop_download_ && scrollReachEndCount < 30){
+    while(!_stop_download_ && scrollReachEndCount < 60){
         await findImgAndDownload();
         const newY = window.scrollY + 500;
         window.scrollTo(0, newY);
-        await sleep(200);
+        await sleep(1000);
+        GM_setValue("downloadedLink", downloadedLink);
            
-        if(window.scrollY < newY){
-            //not scroll as much as expected
-            //meaning reaching the end
-            scrollReachEndCount++;
-        }else{
-            //use count here
-            //be very careful here, I want to download all imgs
-            scrollReachEndCount = 0;
+        if(!isChrome){
+            if(window.scrollY < newY){
+                //not scroll as much as expected
+                //meaning reaching the end
+                scrollReachEndCount++;
+            }else{
+                //use count here
+                //be very careful here, I want to download all imgs
+                scrollReachEndCount = 0;
+            }
         }
     }
     
