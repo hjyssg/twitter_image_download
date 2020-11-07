@@ -132,6 +132,8 @@ async function findImgAndDownload(){
       })
     // queue = queue.filter(e => !downloadedLink[e.link]);
 
+    let downloadNumInOneScroll = 0;
+
     for(let ii = 0; ii < queue.length; ii++){
         const info = queue[ii];
         let { link, author, timestamp, isVideo } = info;
@@ -176,7 +178,12 @@ async function findImgAndDownload(){
         fn = fn.trim();
 
         const _log = ()=>{
+            if(download_count === 0){
+                download_time_beg = new Date();
+            }
+
             download_count++;
+            downloadNumInOneScroll++;
             let download_time_middle = new Date();
             const spd = (download_time_middle.getTime() - download_time_beg.getTime())/download_count/1000;
             console.log(download_count, "imgs downloaded.   ", spd, "second/img");
@@ -202,6 +209,8 @@ async function findImgAndDownload(){
           // debugger
         }
     }
+
+    return downloadNumInOneScroll;
 }
 
 function GM_downloadPromise(_link, fn){
@@ -231,22 +240,29 @@ let download_count;
 let download_time_beg;
 
 async function beginDownloadAndScroll(){
-    if(!_stop_download_){
-        //avoid click twice
-        return;
-    }
-
+    // if(!_stop_download_){
+    //     //avoid click twice
+    //     return;
+    // }
 
     _stop_download_ = false;
     let scrollReachEndCount = 0;
     download_count = 0;
-    download_time_beg = new Date();
-
+    
+    console.log("begin", new Date());
     while(!_stop_download_ && scrollReachEndCount < 60){
-        await findImgAndDownload();
-        const newY = window.scrollY + 500;
-        window.scrollTo(0, newY);
-        await sleep(500);
+        const downloadNumInOneScroll = await findImgAndDownload();
+
+        if(downloadNumInOneScroll === 0){
+            const newY = window.scrollY + 1000;
+            window.scrollTo(0, newY);
+            await sleep(100);
+        }else{
+            const newY = window.scrollY + 500;
+            window.scrollTo(0, newY);
+            await sleep(500);
+        }
+     
         GM_setValue("downloadedLink", downloadedLink);
             
         // this code is buggy, it stops sometimes even there is still img
@@ -273,5 +289,6 @@ async function beginDownloadAndScroll(){
 
     addButton("stop download", () => { 
         _stop_download_ = true;
+        console.log("going to stop...");
     }, {top: '12%'}, "a-stop-button");
 })();
