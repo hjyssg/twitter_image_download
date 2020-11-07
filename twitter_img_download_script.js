@@ -2,8 +2,8 @@
 // @name                Twitter: Download All Images
 // @name:zh-CN          Twitter：下载全部图片
 // @version             0.0.1
-// @description         One button click to download all imgs in twitter page. If Chrome keep popping up the annoying saveAs dialog, go to Chrome setting page and turn it off.
-// @description:zh-CN   一键下载twitter页面所有图片。需要注意使用chrome会一直疯狂跳弹窗，需要用户自行去设置页面关闭.
+// @description         One button click to download all imgs in twitter page. If Chrome keep popping up the annoying saveAs dialog, go to Chrome setting page and turn it off. Firefox is faster after testing.
+// @description:zh-CN   一键下载twitter页面所有图片。需要注意使用chrome会一直疯狂跳弹窗，需要用户自行去设置页面关闭. firefox批量下载比chrome快。
 // @author              aji
 // @namespace           https://github.com/hjyssg
 // @icon                https://i.imgur.com/M9oO8K9.png
@@ -54,6 +54,8 @@ function formatDate(date) {
 }
 
 const MIN_LIKE = 100;
+
+
 
 async function findImgAndDownload(){
     let queue = [];
@@ -172,18 +174,26 @@ async function findImgAndDownload(){
         }
 
         fn = fn.trim();
+
+        const _log = ()=>{
+            download_count++;
+            let download_time_middle = new Date();
+            const spd = (download_time_middle.getTime() - download_time_beg.getTime())/download_count/1000;
+            console.log(download_count, "imgs downloaded.   ", spd, "second/img");
+        }
          
         try{
-          // console.log("begin download", _link)
-          downloadedLink[link] = true;
-          await GM_downloadPromise(_link, fn);
-          // console.log("downloaded", _link);
-          console.log(Object.keys(downloadedLink).length, "imgs downloaded")
-          await sleep(100);
+            
+            await GM_downloadPromise(_link, fn);
+            _log();
+            downloadedLink[link] = true;
+            await sleep(100);
         }catch(err){
             try{
                 await sleep(2000);
                 await GM_downloadPromise(_link, fn);
+                downloadedLink[link] = true;
+                _log();
                 await sleep(1000);
             } catch(err2){
                 console.error("[error]", _link, err2);
@@ -217,28 +227,40 @@ let _stop_download_;
 
 const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 
+let download_count;
+let download_time_beg;
+
 async function beginDownloadAndScroll(){
+    if(!_stop_download_){
+        //avoid click twice
+        return;
+    }
+
+
     _stop_download_ = false;
     let scrollReachEndCount = 0;
+    download_count = 0;
+    download_time_beg = new Date();
 
     while(!_stop_download_ && scrollReachEndCount < 60){
         await findImgAndDownload();
         const newY = window.scrollY + 500;
         window.scrollTo(0, newY);
-        await sleep(1000);
+        await sleep(500);
         GM_setValue("downloadedLink", downloadedLink);
-           
-        if(!isChrome){
-            if(window.scrollY < newY){
-                //not scroll as much as expected
-                //meaning reaching the end
-                scrollReachEndCount++;
-            }else{
-                //use count here
-                //be very careful here, I want to download all imgs
-                scrollReachEndCount = 0;
-            }
-        }
+            
+        // this code is buggy, it stops sometimes even there is still img
+        // if(!isChrome){
+        //     if(window.scrollY < newY){
+        //         //not scroll as much as expected
+        //         //meaning reaching the end
+        //         scrollReachEndCount++;
+        //     }else{
+        //         //use count here
+        //         //be very careful here, I want to download all imgs
+        //         scrollReachEndCount = 0;
+        //     }
+        // }
     }
     
     console.log("download stop");
