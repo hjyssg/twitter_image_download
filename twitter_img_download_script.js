@@ -18,7 +18,7 @@
 
 //https://stackoverflow.com/questions/6480082/add-a-javascript-button-using-greasemonkey-or-tampermonkey
 function addButton(text, onclick, cssObj, id) {
-    const defaultCSS = {position: 'fixed', top: '7%', left:'50%', 'z-index': 3, 
+    const defaultCSS = {position: 'fixed', top: '7%', left:'50%', 'z-index': 3,
                         "background-color": "#57cff7", "color": "white",
                         "padding": "10px", "border": "0px",
                         "font-size": "1rem","font-weight": "bold" }
@@ -45,9 +45,9 @@ function formatDate(date) {
         day = '' + d.getDate(),
         year = d.getFullYear();
 
-    if (month.length < 2) 
+    if (month.length < 2)
         month = '0' + month;
-    if (day.length < 2) 
+    if (day.length < 2)
         day = '0' + day;
 
     return [year, month, day].join('-');
@@ -61,21 +61,22 @@ async function findImgAndDownload(){
     let queue = [];
     document.querySelectorAll("article").forEach(article => {
         //e.g 水洗卜イレ@suisentoire· asdsad
-        let spans = Array.from(article.querySelectorAll("span span"));
+        let spans = Array.from(article.querySelectorAll("a"));
         let author;
         let timestamp;
 
         //get author
         for(let ii = 0; ii < spans.length; ii++){
           let e1 = spans[ii];
-          let e2 = e1.parentElement.parentElement.parentElement.parentElement;
-          if(e2.textContent.includes("@")){
-            author = e2.textContent;
+          if(e1.textContent.includes("@")){
+            const prev = spans[ii-1]
+            author =  prev?  prev.textContent : e1.textContent;
             break;
           }
         }
         if(!author){
-          return;
+            console.warn("skip for no author")
+           return;
         }
 
         //get like
@@ -84,6 +85,7 @@ async function findImgAndDownload(){
         const likeStr =  likeDiv.getAttribute("aria-label");
         let likeNum = likeStr.match(/\d+/);
         if(!likeNum || parseInt(likeNum[0]) < MIN_LIKE){
+             console.warn("skip for no like")
             return;
         }
 
@@ -92,6 +94,7 @@ async function findImgAndDownload(){
             let dt = new Date(timeSpan.getAttribute("datetime"));
             timestamp = formatDate(dt);
         }else{
+            console.warn("skip for no timestap")
             return;
         }
 
@@ -100,6 +103,7 @@ async function findImgAndDownload(){
         //skip video
         let video =  article.querySelector("video");
         if(video){
+            console.warn("skip video")
             return;
         }
         // if(video && video.src){
@@ -111,8 +115,8 @@ async function findImgAndDownload(){
         //       timestamp
         //     });
         // }
-   
-        // console.log(author);  
+
+        // console.log(author);
         const imgs = article.querySelectorAll("img");
         if(imgs.length > 1) {
           imgs.forEach(img => {
@@ -157,13 +161,13 @@ async function findImgAndDownload(){
         if(isVideo){
             _link = link;
         }else{
-            
+
             if(url.search){
                 if(url.searchParams.get("name")){
                     url.searchParams.set("name", "orig")
                 }
                 format = url.searchParams.get("format")
-            }  
+            }
             _link = url.href;
         }
 
@@ -188,9 +192,9 @@ async function findImgAndDownload(){
             const spd = (download_time_middle.getTime() - download_time_beg.getTime())/download_count/1000;
             console.log(download_count, "imgs downloaded.   ", spd, "second/img");
         }
-         
+
         try{
-            
+
             await GM_downloadPromise(_link, fn);
             _log();
             downloadedLink[link] = true;
@@ -216,7 +220,7 @@ async function findImgAndDownload(){
 function GM_downloadPromise(_link, fn){
   return new Promise((resolve, reject) => {
     GM_download({
-            url: _link, 
+            url: _link,
             name: fn,
             saveAs: false,  // this do not work for Chrome
             onerror: err => {
@@ -248,7 +252,7 @@ async function beginDownloadAndScroll(){
     _stop_download_ = false;
     let scrollReachEndCount = 0;
     download_count = 0;
-    
+
     console.log("begin", new Date());
     while(!_stop_download_ && scrollReachEndCount < 60){
         const downloadNumInOneScroll = await findImgAndDownload();
@@ -262,9 +266,9 @@ async function beginDownloadAndScroll(){
             window.scrollTo(0, newY);
             await sleep(500);
         }
-     
+
         GM_setValue("downloadedLink", downloadedLink);
-            
+
         // this code is buggy, it stops sometimes even there is still img
         // if(!isChrome){
         //     if(window.scrollY < newY){
@@ -278,7 +282,7 @@ async function beginDownloadAndScroll(){
         //     }
         // }
     }
-    
+
     console.log("download stop");
 }
 
@@ -287,7 +291,7 @@ async function beginDownloadAndScroll(){
     'use strict';
     addButton("download all images", beginDownloadAndScroll, {top: '7%'}, "a-begin-button");
 
-    addButton("stop download", () => { 
+    addButton("stop download", () => {
         _stop_download_ = true;
         console.log("going to stop...");
     }, {top: '12%'}, "a-stop-button");
