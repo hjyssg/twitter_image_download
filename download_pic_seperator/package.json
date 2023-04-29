@@ -1,0 +1,16 @@
+{
+  "name": "twitter_image_download",
+  "version": "1.0.0",
+  "description": "用于把插件下载的图片按作者分类到不同文件夹",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ini": "^2.0.0",
+    "promise-fs": "^2.1.1",
+    "underscore": "^1.13.3"
+  }
+}
