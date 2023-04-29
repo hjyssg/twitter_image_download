@@ -68,10 +68,12 @@ async function findImgAndDownload(){
         //get author
         for(let ii = 0; ii < spans.length; ii++){
           let e1 = spans[ii];
-          if(e1.textContent.includes("@")){
+          if(e1.textContent.startsWith("@")){
             const prev = spans[ii-1]
             author =  prev?  prev.textContent : e1.textContent;
-            break;
+            if(author){
+                 break;
+            }
           }
         }
         if(!author){
