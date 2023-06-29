@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                Twitter: Download All Images
 // @name:zh-CN          Twitter：下载全部图片
-// @version             0.0.1
+// @version             0.0.3
 // @description         One button click to download all imgs in twitter page. If Chrome keep popping up the annoying saveAs dialog, go to Chrome setting page and turn it off. Firefox is faster after testing.
 // @description:zh-CN   一键下载twitter页面所有图片。需要注意使用chrome会一直疯狂跳弹窗，需要用户自行去设置页面关闭. firefox批量下载比chrome快。
 // @author              aji
@@ -61,24 +61,31 @@ async function findImgAndDownload(){
     let queue = [];
     document.querySelectorAll("article").forEach(article => {
         //e.g 水洗卜イレ@suisentoire· asdsad
-        let spans = Array.from(article.querySelectorAll("a"));
+        let spans = Array.from(article.querySelectorAll("span span"));
         let author;
         let timestamp;
 
         //get author
         for(let ii = 0; ii < spans.length; ii++){
           let e1 = spans[ii];
-          if(e1.textContent.startsWith("@")){
-            const prev = spans[ii-1]
-            author =  prev?  prev.textContent : e1.textContent;
-            if(author){
-                 break;
-            }
+          let e2 = e1.parentElement.parentElement.parentElement.parentElement;
+          if(e2.textContent.includes("@")){
+            author = e2.textContent;
+            break;
           }
         }
         if(!author){
-            console.warn("skip for no author")
-           return;
+          const documentTitle = document.title;
+          try {
+            const userID = documentTitle.match(/@.+?(?=[\)])/);
+            if (userID.length > 0) {
+              author = userID[0];
+            } else {
+              throw new Error('找不到作者')
+            }
+          } catch (e) {
+            author = 'unknown';
+          }
         }
 
         //get like
@@ -87,7 +94,6 @@ async function findImgAndDownload(){
         const likeStr =  likeDiv.getAttribute("aria-label");
         let likeNum = likeStr.match(/\d+/);
         if(!likeNum || parseInt(likeNum[0]) < MIN_LIKE){
-             console.warn("skip for no like")
             return;
         }
 
@@ -96,7 +102,6 @@ async function findImgAndDownload(){
             let dt = new Date(timeSpan.getAttribute("datetime"));
             timestamp = formatDate(dt);
         }else{
-            console.warn("skip for no timestap")
             return;
         }
 
@@ -105,7 +110,6 @@ async function findImgAndDownload(){
         //skip video
         let video =  article.querySelector("video");
         if(video){
-            console.warn("skip video")
             return;
         }
         // if(video && video.src){
