@@ -9,6 +9,7 @@
 // @icon                https://i.imgur.com/M9oO8K9.png
 // @include             https://twitter.com/*
 // @include             https://mobile.twitter.com/*
+// @include             https://x.com/*
 // @grant               GM_download
 // @grant               GM_setValue
 // @grant               GM_getValue
